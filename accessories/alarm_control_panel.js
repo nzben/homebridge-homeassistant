@@ -38,7 +38,7 @@ function HomeAssistantAlarmControlPanel(log, data, client, firmware) {
   this.alarmCode = data.attributes.homebridge_alarm_code;
 
   // SecuritySystemCurrentState
-  this.currentStayArm = Characteristic.SecuritySystemCurrentState.STAY_ARM;  // 0
+  this.currentStayArm = Characteristic.SecuritySystemCurrentState.STAY_ARM; // 0
   this.currentAwayArm = Characteristic.SecuritySystemCurrentState.AWAY_ARM; // 1
   this.currentNightArm = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; // 2
   this.currentDisarmed = Characteristic.SecuritySystemCurrentState.DISARMED; // 3
