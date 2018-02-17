@@ -83,7 +83,7 @@ HomeAssistantAlarmControlPanel.prototype = {
         break;
     }
     this.securitySystemService.getCharacteristic(Characteristic.SecuritySystemCurrentState)
-          .setValue(currentState, null, 'internal');
+      .setValue(currentState, null, 'internal');
 
     let targetState;
     switch (newState.state) {
@@ -120,16 +120,16 @@ HomeAssistantAlarmControlPanel.prototype = {
         break;
     }
     this.securitySystemService.getCharacteristic(Characteristic.SecuritySystemTargetState)
-          .setValue(targetState, null, 'internal');
+      .setValue(targetState, null, 'internal');
 
     if (newState.attributes.fault) {
       this.securitySystemService.getCharacteristic(Characteristic.StatusFault)
-            .setValue(newState.attributes.fault ? this.generalFault : this.noFault, null, 'internal');
+        .setValue(newState.attributes.fault ? this.generalFault : this.noFault, null, 'internal');
     }
 
     if (newState.attributes.tampered) {
       this.securitySystemService.getCharacteristic(Characteristic.StatusTampered)
-            .setValue(newState.attributes.tampered ? this.tampered : this.notTampered, null, 'internal');
+        .setValue(newState.attributes.tampered ? this.tampered : this.notTampered, null, 'internal');
     }
   },
 
@@ -289,40 +289,40 @@ HomeAssistantAlarmControlPanel.prototype = {
     const accessoryInformationService = new Service.AccessoryInformation();
 
     accessoryInformationService
-          .setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
-          .setCharacteristic(Characteristic.Model, this.model)
-          .setCharacteristic(Characteristic.Name, this.name)
-          .setCharacteristic(Characteristic.SerialNumber, this.serial)
-          .setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
+      .setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
+      .setCharacteristic(Characteristic.Model, this.model)
+      .setCharacteristic(Characteristic.Name, this.name)
+      .setCharacteristic(Characteristic.SerialNumber, this.serial)
+      .setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
 
     accessoryInformationService
-          .setCharacteristic(Characteristic.Identify)
-          .on('set', this.identify.bind(this));
+      .setCharacteristic(Characteristic.Identify)
+      .on('set', this.identify.bind(this));
 
     this.securitySystemService = new Service.SecuritySystem();
 
     this.securitySystemService
-          .setCharacteristic(Characteristic.Name, this.name);
+      .setCharacteristic(Characteristic.Name, this.name);
 
     this.securitySystemService
-          .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-          .on('get', this.getSecuritySystemCurrentState.bind(this));
+      .getCharacteristic(Characteristic.SecuritySystemCurrentState)
+      .on('get', this.getSecuritySystemCurrentState.bind(this));
 
     this.securitySystemService
-          .getCharacteristic(Characteristic.SecuritySystemTargetState)
-          .on('get', this.getSecuritySystemTargetState.bind(this))
-          .on('set', this.setSecuritySystemTargetState.bind(this));
+      .getCharacteristic(Characteristic.SecuritySystemTargetState)
+      .on('get', this.getSecuritySystemTargetState.bind(this))
+      .on('set', this.setSecuritySystemTargetState.bind(this));
 
     if (this.data.attributes.fault) {
       this.securitySystemService
-            .addCharacteristic(Characteristic.StatusFault)
-            .on('get', this.getStatusFault.bind(this));
+        .addCharacteristic(Characteristic.StatusFault)
+        .on('get', this.getStatusFault.bind(this));
     }
 
     if (this.data.attributes.tampered) {
       this.securitySystemService
-            .addCharacteristic(Characteristic.StatusTampered)
-            .on('get', this.getStatusTampered.bind(this));
+        .addCharacteristic(Characteristic.StatusTampered)
+        .on('get', this.getStatusTampered.bind(this));
     }
     return [accessoryInformationService, this.securitySystemService];
   }
