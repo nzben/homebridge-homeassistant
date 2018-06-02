@@ -1,6 +1,7 @@
 var Service;
 var Characteristic;
 var communicationError;
+var debounce = require('lodash.debounce');
 
 
 function fahrenheitToCelsius(temperature) {
@@ -102,6 +103,12 @@ HomeAssistantClimate.prototype = {
     }
 
     var that = this;
+
+    this.log(`Trying to set the temperature on the '${this.name}'`);
+    this.setTargetTempDebounced(value);
+    callback();
+  },
+  setTargetTempDebounced: debounce(function (value) {
     var serviceData = {};
     serviceData.entity_id = this.entity_id;
     serviceData.temperature = value;
@@ -111,6 +118,7 @@ HomeAssistantClimate.prototype = {
     }
   
     this.log(`Setting temperature on the '${this.name}' to ${serviceData.temperature}`);
+    var that = this;
 
     this.client.callService(this.domain, 'set_temperature', serviceData, function (data) {
       if (data) {
@@ -120,7 +128,7 @@ HomeAssistantClimate.prototype = {
         callback(communicationError);
       }
     });
-  },
+  }, 1000),
   getTargetHeatingCoolingState: function (callback) {
     this.log('fetching Current Heating Cooling state for: ' + this.name);
 
@@ -196,6 +204,80 @@ HomeAssistantClimate.prototype = {
       }
     });
   },
+  
+  getTargetFanState(callback) {
+    this.log('fetching Current Fan state for: ' + this.name);
+
+   	this.client.fetchState(this.entity_id, (data) => {
+      if (data) {
+        if (data.attributes.operation_mode === 'idle') {
+          callback(null, 0);
+        } else {
+          var fanList = data.attributes.fan_list;
+          if (fanList) {
+            if (fanList.length > 2) {
+              var index = fanList.indexOf(data.attributes.current_fan_mode);
+              callback(null, index);
+            }
+          } else {
+            switch (data.attributes.current_fan_mode) {
+              case 'auto':
+                callback(null, 1);
+                break;
+              default:
+                callback(null, 0);
+            }
+          }
+        }
+      } else {
+        callback(communicationError);
+      }
+    }); 
+  },
+	setTargetFanState(state, callback, context) {
+    if (context === 'internal') {
+      callback();
+      return;
+    }
+
+    const that = this;
+    const serviceData = {};
+    serviceData.entity_id = this.entity_id;
+
+    this.client.fetchState(this.entity_id, (data) => {
+      if (data) {
+        var fanList = data.attributes.fan_list;
+        if (fanList) {
+          for (var index = 0; index < fanList.length - 1; index += 1) {
+            if (speed === index) {
+              serviceData.fan_mode = fanList[index];
+              break;
+            }
+          }
+          if (!serviceData.fan_mode) {
+            serviceData.fan_mode = fanList[fanList.length - 1];
+          }
+        } else if (state == 1) {
+          serviceData.fan_mode = 'auto';
+        } else if (state == 0) {
+          serviceData.fan_mode = 'medium';
+        }
+        this.log(`Setting fan mode on the '${this.name}' to ${serviceData.fan_mode}`);
+
+        this.client.callService(this.domain, 'set_fan_mode', serviceData, (data2) => {
+          if (data2) {
+            that.log(`Successfully set fan mode on the '${that.name}' to ${serviceData.fan_mode}`);
+            callback();
+          } else {
+            callback(communicationError);
+          }
+        });
+      } else {
+        callback(communicationError);
+      }
+    });
+  },	
+
 
   getRotationSpeed(callback) {
     this.client.fetchState(this.entity_id, (data) => {
@@ -340,9 +422,9 @@ HomeAssistantClimate.prototype = {
 
     this.ThermostatService.setCharacteristic(Characteristic.TemperatureDisplayUnits, units);
 
-    this.fanService = new Service.Fan();
+    this.fanService = new Service.Fanv2();
     this.fanService
-      .getCharacteristic(Characteristic.RotationSpeed)
+      .getCharacteristic(Characteristic.CurrentFanState)
       .setProps({
         minValue: 0,
         maxValue: this.maxFanRotationValue,
@@ -350,6 +432,16 @@ HomeAssistantClimate.prototype = {
       })
       .on('get', this.getRotationSpeed.bind(this))
       .on('set', this.setRotationSpeed.bind(this));
+
+    this.fanService
+      .getCharacteristic(Characteristic.TargetFanState)
+      .setProps({
+        maxValue: 1,
+        minValue: 0,
+        validValues: [0,1],
+      })
+      .on('get', this.getTargetFanState.bind(this))
+      .on('set', this.setTargetFanState.bing(this));
 
     return [informationService, this.ThermostatService, this.fanService];
   }
