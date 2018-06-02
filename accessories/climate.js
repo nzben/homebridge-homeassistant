@@ -441,7 +441,7 @@ HomeAssistantClimate.prototype = {
         validValues: [0,1],
       })
       .on('get', this.getTargetFanState.bind(this))
-      .on('set', this.setTargetFanState.bing(this));
+      .on('set', this.setTargetFanState.bind(this));
 
     return [informationService, this.ThermostatService, this.fanService];
   }
