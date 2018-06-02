@@ -234,7 +234,7 @@ HomeAssistantClimate.prototype = {
       }
     }); 
   },
-	setTargetFanState(state, callback, context) {
+  setTargetFanState(state, callback, context) {
     if (context === 'internal') {
       callback();
       return;
@@ -247,17 +247,7 @@ HomeAssistantClimate.prototype = {
     this.client.fetchState(this.entity_id, (data) => {
       if (data) {
         var fanList = data.attributes.fan_list;
-        if (fanList) {
-          for (var index = 0; index < fanList.length - 1; index += 1) {
-            if (speed === index) {
-              serviceData.fan_mode = fanList[index];
-              break;
-            }
-          }
-          if (!serviceData.fan_mode) {
-            serviceData.fan_mode = fanList[fanList.length - 1];
-          }
-        } else if (state == 1) {
+        if (state == 1) {
           serviceData.fan_mode = 'auto';
         } else if (state == 0) {
           serviceData.fan_mode = 'medium';
